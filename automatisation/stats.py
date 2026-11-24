@@ -263,6 +263,8 @@ def main():
     cfg = load_config()
     ours = {c["id"] for c in cfg["channels"].values()}
     data = [collect(k, ch, ours) for k, ch in cfg["channels"].items()]
+    # chaîne la plus populaire d'abord : vues, puis abonnés, puis likes
+    data.sort(key=lambda d: (d["views"], d["subs"], d["likes"]), reverse=True)
     if "--out" in sys.argv:  # mode en ligne (GitHub) : un seul fichier, pas de navigateur
         out = pathlib.Path(sys.argv[sys.argv.index("--out") + 1]).resolve()
         out.parent.mkdir(parents=True, exist_ok=True)
