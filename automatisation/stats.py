@@ -208,6 +208,24 @@ def video_rows(vids):
     return "\n".join(out)
 
 
+def monet(d, color):
+    """Objectif monétisation (pubs) de la chaîne : 1 000 abonnés + vues Shorts des 90 derniers jours."""
+    today = dt.datetime.now(dt.timezone.utc)
+    goal_v = 10_000_000 if today < dt.datetime(2027, 2, 1, tzinfo=dt.timezone.utc) else 20_000_000
+    v90 = sum(v["views"] for v in d["videos"]
+              if (today - dt.datetime.fromisoformat((v["publishAt"] or v["published"]).replace("Z", "+00:00"))).days < 90
+              and v["privacy"] == "public")
+    rows = []
+    for lab, val, goal_ in (("Abonnés", d["subs"], 1000), ("Vues Shorts (90 j)", v90, goal_v)):
+        pct = min(100, 100 * val / goal_)
+        ok = " ✅" if val >= goal_ else ""
+        rows.append(f'<div class="mo"><div class="ph"><span>{lab}</span><b>{n(val)} <small>/ {n(goal_)}{ok}</small></b></div>'
+                    f'<div class="bar thin"><i style="width:{pct:.2f}%;min-width:4px;background:{color}"></i></div>'
+                    f'<div class="op">{pct:.2f} %</div></div>')
+    note = "" if goal_v == 20_000_000 else '<div class="op">⚠ 20 M vues dès le 01/02/2027</div>'
+    return f'<div class="vote"><div class="ph"><span>💰 Objectif monétisation</span></div>{"".join(rows)}{note}</div>'
+
+
 def column(d):
     lk = LOOK[d["key"]]
     days = lk["days"]
@@ -229,6 +247,7 @@ def column(d):
     <div><span>Commentaires</span><b>{n(d['comments'])}</b></div>
     <div><span>Rétention moy.</span><b>{f"{d['ret']:.0f} %" if d['ret'] is not None else '<small>dans 1-2 j</small>'}</b></div>
   </div>
+  {monet(d, lk['c'])}
   {prog}
   {vote_html(d['vote'], lk['c'])}
   <h3>Shorts</h3>
@@ -289,6 +308,7 @@ h1{{font-size:28px;font-weight:800;letter-spacing:-.5px}} .upd{{color:var(--mut)
 .ot .tx{{flex:1;font-size:13px;color:var(--mut);line-height:1.25}} .ot b{{font-size:22px;font-weight:800}}
 .opt.win .L{{background:var(--c);color:#fff}} .opt.win .tx{{color:var(--txt)}}
 .op{{font-size:11px;color:var(--mut);margin-top:4px}}
+.mo{{margin-top:8px}}
 h3{{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--mut)}}
 .vids{{display:flex;flex-direction:column;gap:8px}}
 .vid{{display:block;background:var(--card2);border-radius:12px;padding:10px 12px;color:inherit;text-decoration:none;border:1px solid transparent;transition:.15s}}
