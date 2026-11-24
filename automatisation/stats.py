@@ -188,6 +188,8 @@ def page(data):
         f'<div class="sh"><span>{e(d["name"])}</span><div class="bar thin"><i style="width:{min(100, 100*d["views"]/goal(d["views"])):.1f}%;background:{LOOK[d["key"]]["c"]}"></i></div><b>{n(d["views"])} <small>/ {n(goal(d["views"]))}</small></b></div>'
         for d in data)
     now = dt.datetime.now(BXL)
+    if "--out" in sys.argv:  # en ligne : GitHub démarre avec quelques minutes de retard → on affiche le créneau (h00 / h30)
+        now = now.replace(minute=0 if now.minute < 30 else 30, second=0, microsecond=0)
     return f"""<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="refresh" content="300">

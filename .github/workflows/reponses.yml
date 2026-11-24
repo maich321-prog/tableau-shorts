@@ -1,0 +1,59 @@
+name: Reponses aux commentaires
+
+# 12h, 14h et 22h heure belge. GitHub ne connaît que l'heure UTC :
+# on programme les heures d'hiver ET d'été, et le script ne garde que la bonne.
+on:
+  schedule:
+    - cron: "0 10,11,12,13,20,21 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reponses
+  cancel-in-progress: false
+
+jobs:
+  repondre:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bonne heure ? (12h, 14h, 22h a Bruxelles)
+        id: heure
+        run: |
+          H=$(TZ=Europe/Brussels date +%H)
+          echo "Heure a Bruxelles : $H"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$H" = "12" ] || [ "$H" = "14" ] || [ "$H" = "22" ]; then
+            echo "go=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.heure.outputs.go == '1'
+
+      - uses: actions/setup-python@v7
+        if: steps.heure.outputs.go == '1'
+        with:
+          python-version: "3.12"
+
+      - name: Installer les librairies
+        if: steps.heure.outputs.go == '1'
+        run: pip install google-api-python-client google-auth
+
+      - name: Ecrire les tokens (secrets)
+        if: steps.heure.outputs.go == '1'
+        env:
+          TOKEN_MALIK: ${{ secrets.TOKEN_MALIK }}
+          TOKEN_JACE: ${{ secrets.TOKEN_JACE }}
+          TOKEN_KAI: ${{ secrets.TOKEN_KAI }}
+          TOKEN_VILLES: ${{ secrets.TOKEN_VILLES }}
+        run: |
+          mkdir -p automatisation/tokens
+          printf '%s' "$TOKEN_MALIK"  > automatisation/tokens/token-malik.json
+          printf '%s' "$TOKEN_JACE"   > automatisation/tokens/token-jace.json
+          printf '%s' "$TOKEN_KAI"    > automatisation/tokens/token-kai.json
+          printf '%s' "$TOKEN_VILLES" > automatisation/tokens/token-villes.json
+
+      - name: Repondre (commentaires principaux seulement)
+        if: steps.heure.outputs.go == '1'
+        working-directory: automatisation
+        run: python routine.py
