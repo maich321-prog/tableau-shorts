@@ -1,0 +1,46 @@
+{
+  "channels": {
+    "malik": {
+      "name": "Fight For Mama",
+      "handle": "@FightForMama",
+      "id": "UCk3LSOs5jFJ16osYubrmj3Q",
+      "folder": "videos/malik"
+    },
+    "jace": {
+      "name": "$25K Or Nothing",
+      "handle": "@25KOrNothing",
+      "id": "UCj0BH6JH-wn05xe6wFO8FIA",
+      "folder": "videos/jace"
+    },
+    "kai": {
+      "name": "Zero To Million Kai",
+      "handle": "@ZeroToMillionKai",
+      "id": "UCQ1IZGihzEO3VLc7AOj-1tg",
+      "folder": "videos/kai"
+    },
+    "villes": {
+      "name": "Strange Rule Towns",
+      "handle": "@StrangeRuleTowns",
+      "id": "UC2ynL01gmOWYu5koltfMXMA",
+      "folder": "videos/villes"
+    }
+  },
+  "upload_defaults": {
+    "categoryId": "24",
+    "defaultLanguage": "en",
+    "defaultAudioLanguage": "en",
+    "madeForKids": false,
+    "timezone_note": "publish_at est en UTC (ex: 2026-11-30T17:00:00Z = 18h heure belge en hiver)"
+  },
+  "quota": {
+    "daily_units": 10000,
+    "reply_cost": 50,
+    "max_replies_per_channel_per_run": 35
+  },
+  "schedule": {
+    "heure_belge": "18:00",
+    "publish_at_utc_hiver": "17:00:00Z",
+    "publish_at_utc_ete": "16:00:00Z",
+    "note": "heure d'été belge : fin mars → fin octobre"
+  }
+}
