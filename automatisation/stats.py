@@ -115,6 +115,60 @@ def collect(key, ch, ours):
     }
 
 
+HIST = HERE / "historique.json"
+METRICS = [("views", "Vues"), ("subs", "Abonnés"), ("likes", "J'aime"), ("comments", "Commentaires")]
+
+
+def update_history(data):
+    """Ajoute un point (chaque mise à jour) dans historique.json et renvoie tout l'historique."""
+    import json
+    hist = json.loads(HIST.read_text(encoding="utf-8")) if HIST.exists() else []
+    now = dt.datetime.now(dt.timezone.utc)
+    point = {"t": now.isoformat(timespec="minutes"),
+             "ch": {d["key"]: {k: d[k] for k, _ in METRICS} for d in data}}
+    if hist and (now - dt.datetime.fromisoformat(hist[-1]["t"])).total_seconds() < 600:
+        hist[-1] = point  # deux mises à jour très proches : on garde la dernière
+    else:
+        hist.append(point)
+    hist = hist[-5000:]
+    HIST.write_text(json.dumps(hist, separators=(",", ":")), encoding="utf-8")
+    return hist
+
+
+def chart(hist, metric, label, order):
+    """Petit graphique SVG : total (blanc) + une ligne par chaîne (sa couleur)."""
+    W, H, P = 600, 170, 6
+    if len(hist) < 2:
+        return (f'<div class="chart"><div class="ch-h"><span>{label}</span></div>'
+                '<div class="muted" style="padding:30px 0;text-align:center">Le graphique se remplit à chaque mise à jour ⏳</div></div>')
+    ts = [dt.datetime.fromisoformat(h["t"]).timestamp() for h in hist]
+    t0, t1 = ts[0], ts[-1] or ts[0] + 1
+    tot = [sum(v.get(metric, 0) for v in h["ch"].values()) for h in hist]
+    lo, hi = min(tot), max(tot)
+    pad = max((hi - lo) * 0.15, 1)
+    lo, hi = max(0, lo - pad), hi + pad  # zoom sur la courbe : on voit bien la progression
+    def xy(i, v):
+        x = P + (W - 2 * P) * ((ts[i] - t0) / ((t1 - t0) or 1))
+        y = H - P - (H - 2 * P) * ((v - lo) / ((hi - lo) or 1))
+        return f"{x:.1f},{y:.1f}"
+    lines = []
+    tl = " ".join(xy(i, v) for i, v in enumerate(tot))
+    area = f'{P},{H - P} {tl} {W - P},{H - P}'
+    gid = f"g{metric}"
+    diff = tot[-1] - tot[0]
+    sign = "+" if diff >= 0 else "−"
+    d0 = dt.datetime.fromtimestamp(t0, BXL)
+    d1 = dt.datetime.fromtimestamp(t1, BXL)
+    return (f'<div class="chart"><div class="ch-h"><span>{label}</span><b>{n(tot[-1])}</b>'
+            f'<em class="{"up" if diff >= 0 else "down"}">{sign}{n(abs(diff))}</em></div>'
+            f'<svg viewBox="0 0 {W} {H}" preserveAspectRatio="none" role="img" aria-label="Évolution : {label}">'
+            f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/>'
+            f'<stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>'
+            f'<polygon points="{area}" fill="url(#{gid})"/>{"".join(lines)}'
+            f'<polyline points="{tl}" fill="none" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>'
+            f'<div class="ch-x"><span>{d0:%d/%m %Hh%M}</span><span>{d1:%d/%m %Hh%M}</span></div></div>')
+
+
 def vote_html(v, color):
     if not v:
         return '<div class="vote muted">Pas de vote sur cette chaîne : commentaires libres.</div>'
@@ -182,7 +236,7 @@ def column(d):
 </section>"""
 
 
-def page(data):
+def page(data, hist=None):
     T = {k: sum(d[k] for d in data) for k in ("subs", "views", "likes", "comments", "public", "scheduled")}
     share = "".join(
         f'<div class="sh"><span>{e(d["name"])}</span><div class="bar thin"><i style="width:{min(100, 100*d["views"]/goal(d["views"])):.1f}%;background:{LOOK[d["key"]]["c"]}"></i></div><b>{n(d["views"])} <small>/ {n(goal(d["views"]))}</small></b></div>'
@@ -243,6 +297,16 @@ h3{{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--mut)}
 .vn{{font-size:12px;color:var(--mut);margin:4px 0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 .vs{{display:flex;gap:12px;font-size:13px}}
 .tag{{font-size:11px;padding:2px 8px;border-radius:99px}} .tag.on{{background:#16a34a33;color:#4ade80}} .tag.soon{{background:#f59e0b33;color:#fbbf24}} .tag.off{{background:#64748b33;color:#94a3b8}}
+.evo{{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:22px}}
+.evo-h{{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px}}
+.leg{{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mut)}} .leg i{{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}}
+.charts{{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}}
+.chart{{background:#0f1320;border:1px solid var(--line);border-radius:14px;padding:12px 14px}}
+.ch-h{{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}} .ch-h span{{color:var(--mut);font-size:13px;flex:1}} .ch-h b{{font-size:22px}}
+.ch-h em{{font-style:normal;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px}} .ch-h .up{{background:#16a34a33;color:#4ade80}} .ch-h .down{{background:#ef444433;color:#f87171}}
+.chart svg{{width:100%;height:150px;display:block}}
+.ch-x{{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:4px}}
+@media(max-width:760px){{.charts{{grid-template-columns:1fr}}}}
 @media(max-width:1200px){{.cols{{grid-template-columns:repeat(2,1fr)}}}}
 @media(max-width:760px){{.cols,.total{{grid-template-columns:1fr}} .kpis{{grid-template-columns:1fr 1fr}} .kpis .hero{{grid-column:span 2}} .sh{{grid-template-columns:110px 1fr 56px}}}}
 </style></head><body><div class="wrap">
@@ -257,6 +321,8 @@ h3{{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--mut)}
   <div><h2>Objectif de vues par chaîne</h2>{share}
     <div class="muted" style="margin-top:14px">{T['public']} Shorts en ligne{f" · {T['scheduled']} programmés" if T['scheduled'] else ''}</div></div>
 </div>
+<div class="evo"><div class="evo-h"><h2>Évolution · total des 4 chaînes</h2><div class="leg">à chaque mise à jour</div></div>
+<div class="charts">{''.join(chart(hist or [], m, l, [d["key"] for d in data]) for m, l in METRICS)}</div></div>
 <div class="cols">{''.join(column(d) for d in data)}</div>
 </div></body></html>"""
 
@@ -267,14 +333,15 @@ def main():
     data = [collect(k, ch, ours) for k, ch in cfg["channels"].items()]
     # chaîne la plus populaire d'abord : vues, puis abonnés, puis likes
     data.sort(key=lambda d: (d["views"], d["subs"], d["likes"]), reverse=True)
+    hist = update_history(data)
     if "--out" in sys.argv:  # mode en ligne (GitHub) : un seul fichier, pas de navigateur
         out = pathlib.Path(sys.argv[sys.argv.index("--out") + 1]).resolve()
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(page(data), encoding="utf-8")
+        out.write_text(page(data, hist), encoding="utf-8")
         print(f"OK : {out}")
         return
     out = ROOT / "Tableau-de-bord.html"
-    out.write_text(page(data), encoding="utf-8")
+    out.write_text(page(data, hist), encoding="utf-8")
     desk = ROOT.parent / "Tableau-de-bord.html"  # copie sur le Bureau
     desk.write_text(out.read_text(encoding="utf-8"), encoding="utf-8")
     print(f"OK : {out}")

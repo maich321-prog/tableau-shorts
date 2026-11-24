@@ -18,6 +18,23 @@ from logic import needs_review, pick_reply
 from votes import fetch_comments
 
 
+def episode_info(yt, key, video_id):
+    """Répliques et textes des choix A/B de l'épisode (episodes/jour-N.json), pour répondre en sachant de quoi on parle."""
+    import json, re
+    items = yt.videos().list(part="snippet", id=video_id).execute().get("items", [])
+    m = re.search(r"Day\s+(\d+)", items[0]["snippet"]["title"], re.I) if items else None
+    f = HERE / "episodes" / f"jour-{m.group(1)}.json" if m else None
+    if not f or not f.exists():
+        return {}
+    ep = json.loads(f.read_text(encoding="utf-8")).get(key, {})
+    ch = {}
+    for v in ("A", "B"):
+        mm = re.search(rf"^{v}\)\s*(.+)$", ep.get("description", ""), re.M)
+        if mm:
+            ch[v] = mm.group(1).strip()
+    return {"replies": ep.get("replies", {}), "choices": ch}
+
+
 def already_replied(yt, comment_id, channel_id):
     """Vrai si la chaîne a déjà répondu sous ce commentaire principal (marche aussi depuis GitHub, sans mémoire)."""
     token = None
@@ -47,6 +64,7 @@ def main():
 
     yt = get_service(a.channel)
     comments = fetch_comments(yt, a.video_id)
+    ep = episode_info(yt, a.channel, a.video_id)
     todo, skipped = [], []
     for c in sorted(comments, key=lambda c: c["likes"], reverse=True):
         if c["id"] in done or c["author_id"] == ch["id"]:
@@ -62,7 +80,7 @@ def main():
 
     sent = 0
     for c in todo[:limit]:
-        msg = pick_reply(c["id"], c["text"])
+        msg = pick_reply(c["id"], c["text"], ep)
         print(f"{'(test) ' if a.dry_run else ''}↳ « {c['text'][:60]} »  →  {msg}")
         if not a.dry_run:
             yt.comments().insert(part="snippet", body={"snippet": {"parentId": c["id"], "textOriginal": msg}}).execute()

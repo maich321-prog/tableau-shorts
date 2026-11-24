@@ -88,17 +88,29 @@ def top_free_answers(comments, n=10):
 
 
 # ---------- Réponses courtes et variées (en anglais, halal, sans promesse) ----------
-REPLIES_A = ["Team A 🔥", "A it is? 👀", "Bold pick! 💪", "A gang where you at? 🙌", "Noted 📝 A!",
-             "Solid choice 👊", "We'll see if A wins 👀🔥", "A for the win? 💯"]
-REPLIES_B = ["Team B 🔥", "B it is? 👀", "Smart pick 🧠", "B gang where you at? 🙌", "Noted 📝 B!",
+REPLIES_A = ["Team A 🔥", "A it is? 👀", "Bold pick! 💪", "A gang where you at? 🙌", "Solid choice 👊", "We'll see if A wins 👀🔥", "A for the win? 💯"]
+REPLIES_B = ["Team B 🔥", "B it is? 👀", "Smart pick 🧠", "B gang where you at? 🙌", 
              "Big brain move 💡", "We'll see if B wins 👀🔥", "B for the win? 💯"]
 REPLIES_OTHER = ["🔥🔥", "Love this 🙌", "Facts 💯", "Good one 😂", "Thanks for watching! 🙏",
                  "Stay tuned for tomorrow 👀", "Appreciate you 🙏🔥", "Great idea 💡"]
 
 
-def pick_reply(comment_id, text):
-    """Choisit une réponse stable (même commentaire → même réponse) mais variée d'un commentaire à l'autre."""
+# Si l'épisode n'a pas ses propres répliques : modèles qui citent le choix (on montre qu'on sait de quoi on parle)
+TEMPLATES = ["{v}? {c}… you sure? 😅", "Team {v} 🔥 {c}, let's see how that goes 👀", "{v}! {c}? Bold move 💪",
+             "{c}… that's gonna be tough 😮‍💨 Team {v}?"]
+
+
+def pick_reply(comment_id, text, ep=None):
+    """Choisit une réponse stable (même commentaire → même réponse) mais variée d'un commentaire à l'autre.
+    ep = infos de l'épisode : {"replies": {"A": [...], "B": [...]}, "choices": {"A": "...", "B": "..."}}"""
     v = parse_vote(text)
-    pool = REPLIES_A if v == "A" else REPLIES_B if v == "B" else REPLIES_OTHER
+    ep = ep or {}
+    if v in ("A", "B") and ep.get("replies", {}).get(v):
+        pool = ep["replies"][v]
+    elif v in ("A", "B") and ep.get("choices", {}).get(v):
+        c = ep["choices"][v].rstrip(".")
+        pool = [t.format(v=v, c=c) for t in TEMPLATES]
+    else:
+        pool = REPLIES_A if v == "A" else REPLIES_B if v == "B" else REPLIES_OTHER
     h = int(hashlib.sha1(comment_id.encode()).hexdigest(), 16)
     return pool[h % len(pool)]
