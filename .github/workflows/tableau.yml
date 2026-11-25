@@ -1,9 +1,7 @@
 name: Tableau de bord
 
 on:
-  schedule:
-    - cron: "*/30 * * * *"
-  workflow_dispatch:
+  workflow_dispatch:  # lancé par horloge.yml à chaque h00 / h30
 
 permissions:
   contents: write

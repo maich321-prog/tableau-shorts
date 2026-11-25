@@ -3,9 +3,7 @@ name: Reponses aux commentaires
 # 12h, 14h et 22h heure belge. GitHub ne connaît que l'heure UTC :
 # on programme les heures d'hiver ET d'été, et le script ne garde que la bonne.
 on:
-  schedule:
-    - cron: "0 10,11,12,13,20,21 * * *"
-  workflow_dispatch:
+  workflow_dispatch:  # lancé par horloge.yml à 12h, 14h, 22h heure belge
 
 permissions:
   contents: read

@@ -1,0 +1,44 @@
+name: Horloge
+
+# Les horaires "schedule" de GitHub sont souvent sautés. Cette horloge tourne ~5h45,
+# lance le tableau à chaque h00 / h30 et les réponses à 12h, 14h, 22h (heure belge),
+# puis se relance elle-même. Le "schedule" ci-dessous sert seulement de secours.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: horloge
+  cancel-in-progress: false
+
+jobs:
+  tic-tac:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Boucle
+        run: |
+          fin=$(( $(date +%s) + 345*60 ))
+          gh workflow run tableau.yml || true
+          while [ "$(date +%s)" -lt "$fin" ]; do
+            now=$(date +%s)
+            next=$(( (now/1800 + 1) * 1800 ))
+            [ "$next" -ge "$fin" ] && break
+            sleep $(( next - now ))
+            echo "$(TZ=Europe/Brussels date '+%d/%m %Hh%M') : tableau"
+            gh workflow run tableau.yml || true
+            hm=$(TZ=Europe/Brussels date +%H%M)
+            case "$hm" in 1200|1201|1400|1401|2200|2201)
+              echo "reponses"; gh workflow run reponses.yml || true ;;
+            esac
+          done
+          echo "Relance de l'horloge"
+          gh workflow run horloge.yml
