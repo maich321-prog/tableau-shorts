@@ -335,7 +335,7 @@ h3{{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--mut)}
 .chart{{background:#0f1320;border:1px solid var(--line);border-radius:14px;padding:12px 14px}}
 .ch-h{{display:flex;align-items:baseline;gap:10px;margin-bottom:8px}} .ch-h span{{color:var(--mut);font-size:13px;flex:1}} .ch-h b{{font-size:22px}}
 .ch-h em{{font-style:normal;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px}} .ch-h .up{{background:#16a34a33;color:#4ade80}} .ch-h .down{{background:#ef444433;color:#f87171}}
-.chart svg{{width:100%;height:190px;display:block;overflow:visible}} .chart svg .tk{{font-size:11px;fill:#8a93a8}}
+.chart svg{{width:100%;height:200px;display:block;overflow:visible}} .chart svg .tk{{font-size:11px;fill:#8a93a8}}
 .rg{{display:flex;gap:6px;flex-wrap:wrap}} .rg button{{background:#0f1320;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font:600 13px Inter,system-ui,sans-serif;cursor:pointer}} .rg button.on{{background:#fff;color:#0b0d12;border-color:#fff}}
 .ch-x{{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-top:4px}}
 @media(max-width:760px){{.charts{{grid-template-columns:1fr}}}}
@@ -354,7 +354,7 @@ h3{{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--mut)}
     <div class="muted" style="margin-top:14px">{T['public']} Shorts en ligne{f" · {T['scheduled']} programmés" if T['scheduled'] else ''}</div></div>
 </div>
 <div class="evo"><div class="evo-h"><div><h2>Évolution · total des 4 chaînes</h2><div class="leg" id="evo-sub"></div></div>
-<div class="rg">{''.join(f'<button data-r="{r}">{r}</button>' for r in ("12h", "1j", "7j", "15j", "30j"))}</div></div>
+<div class="rg">{''.join(f'<button data-r="{r}">{"Normal" if r == "normal" else r}</button>' for r in ("normal", "12h", "1j", "7j", "15j", "30j"))}</div></div>
 <div class="charts" id="charts"></div></div>
 <script type="application/json" id="hist-data">{hist_json(hist)}</script>{EVO_JS}
 <div class="cols">{''.join(column(d) for d in data)}</div>
