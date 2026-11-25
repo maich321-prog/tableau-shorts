@@ -23,6 +23,12 @@
       "handle": "@StrangeRuleTowns",
       "id": "UC2ynL01gmOWYu5koltfMXMA",
       "folder": "videos/villes"
+    },
+    "explications": {
+      "name": "I Never Knew That",
+      "handle": "@INeverKnewThatTV",
+      "id": "UCdpZDUccHypfs4dpUHe639Q",
+      "folder": "videos/explications"
     }
   },
   "upload_defaults": {

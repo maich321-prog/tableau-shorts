@@ -1,4 +1,4 @@
-"""Tableau de bord des 4 chaînes → Tableau-de-bord.html (à la racine du projet).
+"""Tableau de bord de toutes les chaînes → Tableau-de-bord.html (à la racine du projet).
 
 Usage : python stats.py          (lit l'API, écrit la page, l'ouvre)
         python stats.py --no-open
@@ -22,9 +22,10 @@ LOOK = {
     "malik": {"c": "#ff7a1a", "c2": "#e63946", "logo": "chaines/fight-for-mama/logo.png", "days": 30},
     "jace": {"c": "#22c55e", "c2": "#0ea5a4", "logo": "chaines/25k-or-nothing/logo.png", "days": 60},
     "kai": {"c": "#a855f7", "c2": "#6366f1", "logo": "chaines/zero-to-million-kai/logo.png", "days": 90},
-    "villes": {"c": "#3b82f6", "c2": "#06b6d4", "logo": "chaines/strange-rule-towns/logo.png", "days": 0},
+    "villes": {"c": "#3b82f6", "c2": "#06b6d4", "logo": "chaines/strange-rule-towns/logo.png", "days": 0, "count": "Villes visitées"},
+    "explications": {"c": "#f59e0b", "c2": "#9a3412", "logo": "chaines/i-never-knew-that/logo.png", "days": 0, "count": "Vidéos en ligne"},
 }
-NO_VOTE = {"villes"}
+NO_VOTE = {"villes", "explications"}
 BXL = ZoneInfo("Europe/Brussels")
 e = html.escape
 
@@ -243,7 +244,7 @@ def column(d):
     last_day = max([v["day"] for v in d["videos"] if v["day"] and v["privacy"] == "public"], default=0)
     prog = (f'<div class="prog"><div class="ph"><span>Progression</span><b>Jour {last_day}/{days}</b></div>'
             f'<div class="bar thin"><i style="width:{100*last_day/days:.1f}%;background:linear-gradient(90deg,{lk["c"]},{lk["c2"]})"></i></div></div>'
-            if days else f'<div class="prog"><div class="ph"><span>Villes visitées</span><b>{d["public"]}</b></div></div>')
+            if days else f'<div class="prog"><div class="ph"><span>{lk.get("count", "Vidéos en ligne")}</span><b>{d["public"]}</b></div></div>')
     logo = ROOT / lk["logo"]
     src = "data:image/png;base64," + base64.b64encode(logo.read_bytes()).decode() if logo.exists() else ""
     return f"""<section class="col" style="--c:{lk['c']};--c2:{lk['c2']}">
@@ -342,9 +343,9 @@ h3{{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--mut)}
 @media(max-width:1200px){{.cols{{grid-template-columns:repeat(2,1fr)}}}}
 @media(max-width:760px){{.cols,.total{{grid-template-columns:1fr}} .kpis{{grid-template-columns:1fr 1fr}} .kpis .hero{{grid-column:span 2}} .sh{{grid-template-columns:110px 1fr 56px}}}}
 </style></head><body><div class="wrap">
-<div class="top"><h1>📊 Tableau de bord · 4 chaînes</h1><div class="upd">Mis à jour le {now:%d/%m/%Y à %Hh%M}</div></div>
+<div class="top"><h1>📊 Tableau de bord · {len(data)} chaînes</h1><div class="upd">Mis à jour le {now:%d/%m/%Y à %Hh%M}</div></div>
 <div class="total">
-  <div><h2>Total des 4 chaînes</h2><div class="kpis">
+  <div><h2>Total des {len(data)} chaînes</h2><div class="kpis">
     <div class="hero"><span>Abonnés au total</span><b>{n(T['subs'])}</b></div>
     <div><span>Vues</span><b>{n(T['views'])}</b></div>
     <div><span>J'aime</span><b>{n(T['likes'])}</b></div>
@@ -353,7 +354,7 @@ h3{{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--mut)}
   <div><h2>Objectif de vues par chaîne</h2>{share}
     <div class="muted" style="margin-top:14px">{T['public']} Shorts en ligne{f" · {T['scheduled']} programmés" if T['scheduled'] else ''}</div></div>
 </div>
-<div class="evo"><div class="evo-h"><div><h2>Évolution · total des 4 chaînes</h2><div class="leg" id="evo-sub"></div></div>
+<div class="evo"><div class="evo-h"><div><h2>Évolution · total des {len(data)} chaînes</h2><div class="leg" id="evo-sub"></div></div>
 <div class="rg">{''.join(f'<button data-r="{r}">{"Normal" if r == "normal" else r}</button>' for r in ("normal", "12h", "1j", "7j", "15j", "30j"))}</div></div>
 <div class="charts" id="charts"></div></div>
 <script type="application/json" id="hist-data">{hist_json(hist)}</script>{EVO_JS}
@@ -364,7 +365,9 @@ h3{{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--mut)}
 def main():
     cfg = load_config()
     ours = {c["id"] for c in cfg["channels"].values()}
-    data = [collect(k, ch, ours) for k, ch in cfg["channels"].items()]
+    from common import token_path
+    # une chaîne pas encore autorisée (pas de jeton) est simplement ignorée
+    data = [collect(k, ch, ours) for k, ch in cfg["channels"].items() if token_path(k).exists()]
     # chaîne la plus populaire d'abord : vues, puis abonnés, puis likes
     data.sort(key=lambda d: (d["views"], d["subs"], d["likes"]), reverse=True)
     hist = update_history(data)

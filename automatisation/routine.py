@@ -19,7 +19,7 @@ from common import HERE, ROOT, get_service, load_config, write_json
 from logic import needs_review, tally, top_free_answers
 from votes import fetch_comments
 
-NO_VOTE = {"villes"}
+NO_VOTE = {"villes", "explications"}
 
 
 def latest_public_video(yt, channel_id):
@@ -43,7 +43,11 @@ def main():
     today = dt.date.today().isoformat()
     lines = [f"# Routine du {today}", ""]
 
+    from common import token_path
     for key, ch in cfg["channels"].items():
+        if not token_path(key).exists():
+            lines.append(f"- **{ch['name']}** : pas encore autorisée (python auth.py {key}).")
+            continue
         yt = get_service(key)
         vid, title = latest_public_video(yt, ch["id"])
         if not vid:

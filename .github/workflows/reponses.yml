@@ -44,12 +44,14 @@ jobs:
           TOKEN_JACE: ${{ secrets.TOKEN_JACE }}
           TOKEN_KAI: ${{ secrets.TOKEN_KAI }}
           TOKEN_VILLES: ${{ secrets.TOKEN_VILLES }}
+          TOKEN_EXPLICATIONS: ${{ secrets.TOKEN_EXPLICATIONS }}
         run: |
           mkdir -p automatisation/tokens
           printf '%s' "$TOKEN_MALIK"  > automatisation/tokens/token-malik.json
           printf '%s' "$TOKEN_JACE"   > automatisation/tokens/token-jace.json
           printf '%s' "$TOKEN_KAI"    > automatisation/tokens/token-kai.json
           printf '%s' "$TOKEN_VILLES" > automatisation/tokens/token-villes.json
+          [ -n "$TOKEN_EXPLICATIONS" ] && printf '%s' "$TOKEN_EXPLICATIONS" > automatisation/tokens/token-explications.json || true
 
       - name: Repondre (commentaires principaux seulement)
         if: steps.heure.outputs.go == '1'
