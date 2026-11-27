@@ -33,8 +33,14 @@
     "gorilles": {
       "name": "30K Humans vs Gorillas",
       "handle": "@30KHumansVsGorillas",
-      "id": "A_REMPLIR_APRES_CREATION",
+      "id": "UCNx0zSeQlc7nQVSlB-Hg_3w",
       "folder": "videos/gorilles"
+    },
+    "clipping": {
+      "name": "Straight Talk Cuts",
+      "handle": "@StraightTalkCutsTV",
+      "id": "UCfO8xblNDqWFqQ7D-8zC-GA",
+      "folder": "videos/clipping"
     }
   },
   "upload_defaults": {

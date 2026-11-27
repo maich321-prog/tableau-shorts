@@ -25,6 +25,7 @@ LOOK = {
     "villes": {"c": "#3b82f6", "c2": "#06b6d4", "logo": "chaines/strange-rule-towns/logo.png", "days": 0, "count": "Villes visitées"},
     "explications": {"c": "#f59e0b", "c2": "#9a3412", "logo": "chaines/i-never-knew-that/logo.png", "days": 0, "count": "Vidéos en ligne"},
     "gorilles": {"c": "#84cc16", "c2": "#78350f", "logo": "chaines/30k-humans-vs-gorillas/logo.png", "days": 0, "count": "Humains / 30 000"},
+    "clipping": {"c": "#ef4444", "c2": "#111827", "logo": "chaines/straight-talk-cuts/logo.png", "days": 0, "count": "Clips en ligne"},
 }
 PENDING = []  # chaînes de config.json pas encore autorisées (pas de jeton) : carte « bientôt »
 
@@ -38,7 +39,7 @@ def pending_column(key, ch):
   <div class="big"><span>Statut</span><b style="font-size:20px">🚧 Bientôt</b></div>
   <div class="prog"><div class="ph"><span>Chaîne YouTube</span><b>à créer puis autoriser</b></div></div>
 </section>"""
-NO_VOTE = {"villes", "explications"}
+NO_VOTE = {"villes", "explications", "clipping", "gorilles"}
 BXL = ZoneInfo("Europe/Brussels")
 e = html.escape
 
