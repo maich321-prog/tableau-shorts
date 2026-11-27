@@ -29,6 +29,12 @@
       "handle": "@INeverKnewThatTV",
       "id": "UCdpZDUccHypfs4dpUHe639Q",
       "folder": "videos/explications"
+    },
+    "gorilles": {
+      "name": "30K Humans vs Gorillas",
+      "handle": "@30KHumansVsGorillas",
+      "id": "A_REMPLIR_APRES_CREATION",
+      "folder": "videos/gorilles"
     }
   },
   "upload_defaults": {

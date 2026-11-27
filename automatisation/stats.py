@@ -24,7 +24,20 @@ LOOK = {
     "kai": {"c": "#a855f7", "c2": "#6366f1", "logo": "chaines/zero-to-million-kai/logo.png", "days": 90},
     "villes": {"c": "#3b82f6", "c2": "#06b6d4", "logo": "chaines/strange-rule-towns/logo.png", "days": 0, "count": "Villes visitées"},
     "explications": {"c": "#f59e0b", "c2": "#9a3412", "logo": "chaines/i-never-knew-that/logo.png", "days": 0, "count": "Vidéos en ligne"},
+    "gorilles": {"c": "#84cc16", "c2": "#78350f", "logo": "chaines/30k-humans-vs-gorillas/logo.png", "days": 0, "count": "Humains / 30 000"},
 }
+PENDING = []  # chaînes de config.json pas encore autorisées (pas de jeton) : carte « bientôt »
+
+
+def pending_column(key, ch):
+    lk = LOOK.get(key, {"c": "#64748b", "c2": "#334155"})
+    return f"""<section class="col" style="--c:{lk['c']};--c2:{lk['c2']};opacity:.75">
+  <header>
+    <div><h2>{e(ch.get('name', key))}</h2><span style="color:var(--mut);font-size:13px">{e(ch.get('handle', ''))}</span></div>
+  </header>
+  <div class="big"><span>Statut</span><b style="font-size:20px">🚧 Bientôt</b></div>
+  <div class="prog"><div class="ph"><span>Chaîne YouTube</span><b>à créer puis autoriser</b></div></div>
+</section>"""
 NO_VOTE = {"villes", "explications"}
 BXL = ZoneInfo("Europe/Brussels")
 e = html.escape
@@ -358,7 +371,7 @@ h3{{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--mut)}
 <div class="rg">{''.join(f'<button data-r="{r}">{"Normal" if r == "normal" else r}</button>' for r in ("normal", "12h", "1j", "7j", "15j", "30j"))}</div></div>
 <div class="charts" id="charts"></div></div>
 <script type="application/json" id="hist-data">{hist_json(hist)}</script>{EVO_JS}
-<div class="cols">{''.join(column(d) for d in data)}</div>
+<div class="cols">{''.join(column(d) for d in data)}{''.join(pending_column(k, ch) for k, ch in PENDING)}</div>
 </div></body></html>"""
 
 
@@ -368,6 +381,7 @@ def main():
     from common import token_path
     # une chaîne pas encore autorisée (pas de jeton) est simplement ignorée
     data = [collect(k, ch, ours) for k, ch in cfg["channels"].items() if token_path(k).exists()]
+    PENDING[:] = [(k, ch) for k, ch in cfg["channels"].items() if not token_path(k).exists()]
     # chaîne la plus populaire d'abord : vues, puis abonnés, puis likes
     data.sort(key=lambda d: (d["views"], d["subs"], d["likes"]), reverse=True)
     hist = update_history(data)
