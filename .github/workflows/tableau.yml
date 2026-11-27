@@ -33,6 +33,8 @@ jobs:
           TOKEN_KAI: ${{ secrets.TOKEN_KAI }}
           TOKEN_VILLES: ${{ secrets.TOKEN_VILLES }}
           TOKEN_EXPLICATIONS: ${{ secrets.TOKEN_EXPLICATIONS }}
+          TOKEN_GORILLES: ${{ secrets.TOKEN_GORILLES }}
+          TOKEN_CLIPPING: ${{ secrets.TOKEN_CLIPPING }}
         run: |
           mkdir -p automatisation/tokens
           printf '%s' "$TOKEN_MALIK"  > automatisation/tokens/token-malik.json
@@ -40,6 +42,8 @@ jobs:
           printf '%s' "$TOKEN_KAI"    > automatisation/tokens/token-kai.json
           printf '%s' "$TOKEN_VILLES" > automatisation/tokens/token-villes.json
           [ -n "$TOKEN_EXPLICATIONS" ] && printf '%s' "$TOKEN_EXPLICATIONS" > automatisation/tokens/token-explications.json || true
+          [ -n "$TOKEN_GORILLES" ] && printf '%s' "$TOKEN_GORILLES" > automatisation/tokens/token-gorilles.json || true
+          [ -n "$TOKEN_CLIPPING" ] && printf '%s' "$TOKEN_CLIPPING" > automatisation/tokens/token-clipping.json || true
 
       - name: Fabriquer la page
         run: |
